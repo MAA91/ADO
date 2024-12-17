@@ -1,4 +1,5 @@
-﻿using System;
+﻿#define PRINT_AUTHORS
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -19,44 +20,65 @@ namespace ADO
             SqlConnection connection = new SqlConnection(connectionString);
 
             string cmd_all_from_Authors = "SELECT * FROM Authors";
-            SqlCommand command_all_from_Authors = new SqlCommand(cmd_all_from_Authors, connection);
+            SqlCommand command = new SqlCommand(cmd_all_from_Authors, connection);
             connection.Open();
 
-            SqlDataReader reader_all_from_Authors = command_all_from_Authors.ExecuteReader();
+            SqlDataReader reader = command.ExecuteReader();
 
-            const int padding = 30;
-            for (int i = 0; i < reader_all_from_Authors.FieldCount; i++) Console.Write(reader_all_from_Authors.GetName(i).PadRight(padding));
+            const int padding = 32;
+            for (int i = 0; i < reader.FieldCount; i++) Console.Write(reader.GetName(i).PadRight(padding));
             Console.WriteLine();
-            if (!reader_all_from_Authors.IsClosed)
+            if (reader.HasRows)
             {
-                while (reader_all_from_Authors.Read())
+                while (reader.Read())
                 {
-                    for (int i = 0; i < reader_all_from_Authors.FieldCount; i++)
-                        Console.Write(reader_all_from_Authors[i].ToString().PadRight(padding));
+                    for (int i = 0; i < reader.FieldCount; i++)
+                        Console.Write(reader[i].ToString().PadRight(padding));
                     Console.WriteLine();
                 }
             }
-            reader_all_from_Authors.Close();
+            reader.Close();
             Console.WriteLine("\n------------------------------\n");
+            connection.Close();
 
-            string cmd_all_from_Books = "SELECT * FROM Books";
-            SqlCommand command_all_from_Books = new SqlCommand(cmd_all_from_Books, connection);
-
-            SqlDataReader reader_all_from_Books = command_all_from_Books.ExecuteReader();
-
-            for (int i = 0; i < reader_all_from_Books.FieldCount; i++) Console.Write(reader_all_from_Books.GetName(i).PadRight(padding));
-            Console.WriteLine();
-            if (!reader_all_from_Books.IsClosed)
+            command.CommandText = "SELECT book_title, first_name+' '+last_name AS 'Author' " +
+                "FROM Books JOIN Authors ON (author=author_id)";
+            connection.Open();
+            reader = command.ExecuteReader();
+            if(reader.HasRows)
             {
-                while (reader_all_from_Books.Read())
+                for (int i = 0; i < reader.FieldCount; i++)
+                    Console.Write(reader.GetName(i).PadRight(padding));
+                Console.WriteLine();
+                while (reader.Read())
                 {
-                    for (int i = 0; i < reader_all_from_Books.FieldCount; i++)
-                        Console.Write(reader_all_from_Books[i].ToString().PadRight(padding));
+                    for (int i = 0; i < reader.FieldCount; i++)
+                        Console.Write(reader[i].ToString().PadRight(padding));
                     Console.WriteLine();
                 }
             }
-            reader_all_from_Books.Close();
+            reader.Close();
+            connection.Close();
             Console.WriteLine("\n------------------------------\n");
+
+            command.CommandText =
+                "SELECT first_name+' '+last_name AS 'Author', COUNT(book_id) AS 'Books count' " +
+                "FROM Books JOIN Authors ON (author=author_id)" +
+                "GROUP BY last_name, first_name";
+            connection.Open();
+            reader = command.ExecuteReader();
+            if(reader.HasRows)
+            {
+                for (int i = 0; i < reader.FieldCount; i++)
+                    Console.Write(reader.GetName(i).PadRight(padding));
+                Console.WriteLine();
+                while(reader.Read())
+                {
+                    for(int i = 0;i < reader.FieldCount; i++)
+                        Console.Write(reader[i].ToString().PadRight(padding));
+                    Console.WriteLine();
+                }
+            }
             connection.Close();
         }
     }
